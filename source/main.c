@@ -7,20 +7,24 @@
 
 #include "LED.h"
 #include "MCU.h"
-	
-#define PATH_SPLASH "romfs:/splash.bin"
-#define PATH_PAYLOADRFS "romfs:/payload.firm"
-#define PATH_BOOTFIRM "boot.firm"
-#define PATH_PAYLOADSD "TST/payloads/" APP_TITLE ".firm"
-#define PATH_FB3DSCFGSD "3DS/fastbootcfg.txt"
-#define PATH_FB3DSCFGCTR "/fastboot3ds/fastbootcfg.txt"
-#define PATH_LOG "TST/log.txt"
 
-#define FB3DS_FIRMBOOTSTR "RAM_FIRM_BOOT = Enabled"
+//#define PATH_BOOTFIRM "boot.firm"
+//#define PATH_LOG "TST/log.txt"
+//#define PATH_FB3DSCFGSD "3DS/fastbootcfg.txt"
+//#define PATH_FB3DSCFGCTR "/fastboot3ds/fastbootcfg.txt"
+//#define FB3DS_FIRMBOOTSTR "RAM_FIRM_BOOT = Enabled"
 
 #define FIRM_MAXSIZE (1024 * 1024 * 4 - 0x200)
 #define FIRM_OFFSET (0x1000)
 #define CONF_REG	0x17
+#define PATH_SPLASH "romfs:/splash.bin"
+
+#define PATH_PAYLOADSD1 PATH1 APP_TITLE ".firm"
+#define PATH_PAYLOADSD2 PATH2 APP_TITLE ".firm"
+#define PATH_PAYLOADSD3 PATH3 APP_TITLE ".firm"
+#define PATH_PAYLOADSD4 PATH4 APP_TITLE ".firm"
+
+#define PATH_PAYLOADRFS "romfs:/payload.firm"
 
 void *buf = NULL;
 
@@ -34,7 +38,7 @@ void __attribute__((weak)) __appInit(void)
     acInit();
     hidInit();
     fsInit();
-    sdmcInit();
+    archiveMountSdmc();
 	romfsInit();
 	
 }
@@ -42,7 +46,7 @@ void __attribute__((weak)) __appInit(void)
 void __attribute__((weak)) __appExit(void) 
 {
 	// Exit services
-    sdmcExit();
+	archiveUnmountAll();
 	romfsExit();
     fsExit();
 	gfxExit();
@@ -129,17 +133,63 @@ int main()
 		ERRF_ThrowResultWithMessage((Result) 'TST', "Read the README next time");
 		errfExit();
 	}*/
-	payload = fopen(PATH_PAYLOADSD, "r");
-	
-	if(!payload)
-	{
+
+/*
+	I know this is the worst thing ever but I'm not a programmer and I don't know how to make this prettier.
+	Again sorry for the mess.
+
+	This mess is used to check if PATH_PAYLOADSD1-4 isn't set to none and then tries to load it.
+	If something is returned then it sets payload_found to 1 and skips the other checks.
+	If nothing is returned then it checks the next path until it runs out of them.
+	If no payloads have been found in the sd paths it loads the payload from ROMFS.
+*/
+
+	int payload_found = 0;
+
+	if(PATH_PAYLOADSD1 != "none") {
+		payload = fopen(PATH_PAYLOADSD1, "r");
+
+		if (payload) {
+			payload_found = 1;
+			printf("Custom payload found on Path1 (SD)\n");
+		}
+	}
+
+	if(PATH_PAYLOADSD2 != "none" && payload_found == 0) {
+		payload = fopen(PATH_PAYLOADSD2, "r");
+
+		if (payload) {
+			payload_found = 1;
+			printf("Custom payload found on Path2 (SD)\n");
+		}
+	}
+
+	if(PATH_PAYLOADSD3 != "none" && payload_found == 0) {
+		payload = fopen(PATH_PAYLOADSD3, "r");
+
+		if (payload) {
+			payload_found = 1;
+			printf("Custom payload found on Path3 (SD)\n");
+		}
+	}
+
+	if(PATH_PAYLOADSD4 != "none" && payload_found == 0) {
+		payload = fopen(PATH_PAYLOADSD4, "r");
+
+		if (payload) {
+			payload_found = 1;
+			printf("Custom payload found on Path4 (SD)\n");
+		}
+	}
+
+	if(payload_found == 0) {
 		payload = fopen(PATH_PAYLOADRFS, "r");
+
+		if (payload) {
+			printf("Using integrated payload (RomFS)\n");
+		}
 	}
-	else
-	{
-		printf("Custom payload found on SD\n");
-	}
-	
+
 	//log = fopen(PATH_LOG,"w");
 	//fprintf(log, "RamBootFB3ds() returned %d", ret);
 	//fclose(log);

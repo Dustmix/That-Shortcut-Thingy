@@ -39,6 +39,11 @@ APP_PRODUCT_CODE:=  CTR-P-AGM9
 APP_UNIQUE_ID   :=  0xA9001
 ICON            :=  $(TOPDIR)/assets/icon.png
 
+PATH1			:=  TST/payloads/
+PATH2			:=  luma/payloads/
+PATH3			:=  /
+PATH4			:=  none
+
 APP_TITLE       :=  $(shell echo "$(APP_TITLE)" | cut -c1-128)
 APP_DESCRIPTION :=  $(shell echo "$(APP_DESCRIPTION)" | cut -c1-256)
 APP_AUTHOR      :=  $(shell echo "$(APP_AUTHOR)" | cut -c1-128)
@@ -54,7 +59,7 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-fomit-frame-pointer -ffast-math \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS -DAPP_TITLE="\"$(APP_TITLE)\"" -Og
+CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS -DAPP_TITLE="\"$(APP_TITLE)\"" -Og -DPATH1="\"$(PATH1)\"" -DPATH2="\"$(PATH2)\"" -DPATH3="\"$(PATH3)\"" -DPATH4="\"$(PATH4)\""
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
